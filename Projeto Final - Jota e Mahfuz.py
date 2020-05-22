@@ -16,4 +16,3 @@ pygame.init() # Iniciando as rotinas do pygame
 surf = pygame.display.set_mode((500, 500))
 
 pygame.display.set_caption("Insira o nome do jogo aqui")
- 
