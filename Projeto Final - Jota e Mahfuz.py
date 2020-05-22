@@ -8,7 +8,7 @@ LARGURA = 360
 ALTURA = 480
 FPS = 30
 
-#Definindo cores:
+#DEFININDO CORES:
 BRANCO = (255, 255, 255)
 PRETO = (0, 0, 0)
 VERMELHO = (255, 0, 0) 
@@ -17,7 +17,7 @@ AZUL = (0, 0, 255)
 CINZA = (127, 127, 127)
 
 
-#INICIANDO A ROTINA DO PYGAME
+#INICIANDO A ROTINA DO PYGAME:
 pygame.init()
 pygame.mixer.init()
 
@@ -25,7 +25,7 @@ tela = pygame.display.set_mode((LARGURA, ALTURA))
 pygame.display.set_caption("DUDLE JUMP")
 clock = pygame.time.Clock()
 
-#GAME LOOP
+#GAME LOOP:
 gestao = True
 while gestao:
     #Deixar na velocidade certa
@@ -42,3 +42,5 @@ while gestao:
 
 
 pygame.quit()
+
+
