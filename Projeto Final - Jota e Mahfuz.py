@@ -21,7 +21,7 @@ pygame.init()
 pygame.mixer.init()
 
 tela = pygame.display.set_mode((LARGURA, ALTURA))
-pygame.display.set_caption("DUDE JUMP")
+pygame.display.set_caption("DUDLE JUMP")
 clock = pygame.time.Clock()
 
 #GAME LOOP
