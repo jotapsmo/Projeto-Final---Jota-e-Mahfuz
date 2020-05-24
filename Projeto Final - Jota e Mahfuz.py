@@ -16,6 +16,28 @@ VERDE = (0, 255, 0)
 AZUL = (0, 0, 255)
 CINZA = (127, 127, 127)
 
+class GAME:
+    def __init(self):
+        #Abre a janela do jogo 
+        pass
+    def new(self):
+        #Começa um jogo novo
+        pass
+    def run(self):
+        #Game loop
+        pass
+    def Update(self):
+        #Game loop - Update
+        pass
+    def eventos(self):
+        #Game loop - eventos
+        pass
+    def draw(self):
+        #Game loop - draw
+        pass
+
+g = GAME()
+
 
 #INICIANDO A ROTINA DO PYGAME:
 pygame.init()
