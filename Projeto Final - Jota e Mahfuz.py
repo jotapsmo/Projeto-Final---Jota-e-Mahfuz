@@ -1,7 +1,6 @@
 
 import pygame
 import random 
-from sprites import *
 
 LARGURA = 480
 ALTURA = 600
