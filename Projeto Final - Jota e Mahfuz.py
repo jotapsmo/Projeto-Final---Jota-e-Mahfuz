@@ -1,7 +1,6 @@
 
 import pygame
 import random 
-from sprites import *
 
 LARGURA = 480
 ALTURA = 600
@@ -10,7 +9,8 @@ FPS = 60
 #DEFININDO CORES:
 BRANCO = (255, 255, 255)
 PRETO = (0, 0, 0)
-VERMELHO = (255, 0, 0) 
+VERMELHO = (255, 0, 0)
+AMARELO = (255,255,0)
 VERDE = (0, 255, 0)
 AZUL = (0, 0, 255)
 CINZA = (127, 127, 127)
