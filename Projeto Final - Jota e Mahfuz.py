@@ -1,12 +1,11 @@
 
 import pygame
 import random 
-import os
-import sys
+from sprites import *
 
-LARGURA = 360
-ALTURA = 480
-FPS = 30
+LARGURA = 480
+ALTURA = 600
+FPS = 60
 
 #DEFININDO CORES:
 BRANCO = (255, 255, 255)
@@ -16,53 +15,62 @@ VERDE = (0, 255, 0)
 AZUL = (0, 0, 255)
 CINZA = (127, 127, 127)
 
-class GAME:
-    def __init(self):
+class Game:
+    def __init__(self):
         #Abre a janela do jogo 
-        pass
+        pygame.init()
+        pygame.mixer.init()
+        self.tela = pygame.display.set_mode((LARGURA, ALTURA))
+        pygame.display.set_caption("DUDLE JUMP")
+        self.clock = pygame.time.Clock()
+        self.gestao = True
+
     def new(self):
         #Começa um jogo novo
-        pass
+        self.all_sprites = pygame.sprite.Group()
+        self.run()
+
     def run(self):
         #Game loop
-        pass
-    def Update(self):
+        self.jogar = True
+        while self.jogar:
+            self.clock.tick(FPS)
+            self.eventos()
+            self.update()
+            self.draw()
+
+    def update(self):
         #Game loop - Update
-        pass
+        self.all_sprites.update
+
     def eventos(self):
         #Game loop - eventos
-        pass
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                if self.jogar:
+                    self.jogar = False
+                self.gestao = False
+
     def draw(self):
         #Game loop - draw
+        self.tela.fill(PRETO)
+        self.all_sprites.draw(self.tela)
+        #Depois de desenhar tudo, flip o display
+        pygame.display.flip()
+    
+    def show_tela_inicio(self):
+        #Mostra a tela de início
         pass
 
-g = GAME()
+    def show_tela_fim(self):
+        #Mostra a tela do Game Over
+        pass
 
 
-#INICIANDO A ROTINA DO PYGAME:
-pygame.init()
-pygame.mixer.init()
-
-tela = pygame.display.set_mode((LARGURA, ALTURA))
-pygame.display.set_caption("DUDLE JUMP")
-clock = pygame.time.Clock()
-
-#GAME LOOP:
-gestao = True
-while gestao:
-    #Deixar na velocidade certa
-    clock.tick(FPS)
-    #Eventos
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            gestao = False
-    #Update
-    #Render - Draw
-    tela.fill(PRETO)
-    #Depois de desenhar tudo, flip o display
-    pygame.display.flip()
-
+g = Game()
+g.show_tela_inicio()
+while g.gestao:
+    g.new()
+    g.show_tela_fim()
 
 pygame.quit()
-
-
