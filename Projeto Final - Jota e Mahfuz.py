@@ -1,6 +1,7 @@
 
 import pygame
-import random 
+import random
+vet = pygame.math.Vector2
 
 LARGURA = 480
 ALTURA = 600
@@ -14,34 +15,49 @@ VERDE = (0, 255, 0)
 AZUL = (0, 0, 255)
 CINZA = (127, 127, 127)
 
+AC_JOGADOR = 0.6
+F_JOGADOR = -0.15
+
 class Jogador(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((30, 40))
         self.image.fill(VERMELHO)
         self.rect = self.image.get_rect()
+        #DEFINE A POSIÇÃO INCIAL DO JOGADOR
         self.rect.center = (LARGURA / 2, ALTURA / 2)
-        self.vx = 0
-        self.vy = 0
+        self.pos = vet(LARGURA / 2, ALTURA / 2)
+        self.vel = vet(0,0)
+        self.ac = vet(0,0)
 
     def update(self):
-        self.vx = 0
+        self.ac = vet(0, 0.5)
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            self.vx = -5
+            self.ac.x = -AC_JOGADOR
         if keys[pygame.K_RIGHT]:
-            self.vx = 5
-        if keys[pygame.K_UP]:
-            self.vy = -5
-        if keys[pygame.K_DOWN]:
-            self.vy = 5
+            self.ac.x = AC_JOGADOR
 
+        #CONTROLE SOBRE A MOVIMENTAÇÃO DO JOGADOR --> FRICÇÃO E EQUAÇÕES DE MOVIMENTO
+        self.ac.x += self.vel.x * F_JOGADOR
+        self.vel += self.ac
+        self.pos += self.vel + 0.5 * self.ac
+        #DAR A VOLTA NA TELA
+        if self.pos.x > LARGURA:
+            self.pos.x = 0
+        if self.pos.x < 0:
+            self.pos.x = LARGURA
 
+        self.rect.midbottom = self.pos
 
-        self.rect.x += self.vx 
-        self.rect.y += self.vy
-
-
+class Plataformas(pygame.sprite.Sprite):
+    def __init__(self, x, y, l, h):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((l, h))
+        self.image.fill(BRANCO)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 class Game:
     def __init__(self):
@@ -56,8 +72,15 @@ class Game:
     def new(self):
         #Começa um jogo novo
         self.all_sprites = pygame.sprite.Group()
+        self.plataforma = pygame.sprite.Group()
         self.jogador = Jogador()
         self.all_sprites.add(self.jogador)
+        pl = Plataformas(0, ALTURA - 40, LARGURA, 40)
+        self.all_sprites.add(pl)
+        self.plataforma.add(pl)
+        p2 = Plataformas(LARGURA / 2 - 50, ALTURA * 3 / 4, 100, 20)
+        self.all_sprites.add(p2)
+        self.plataforma.add(p2)
         self.run()
 
     def run(self):
@@ -72,6 +95,11 @@ class Game:
     def update(self):
         #Game loop - Update
         self.all_sprites.update()
+        hit = pygame.sprite.spritecollide(self.jogador, self.plataforma, False)
+        if hit:
+            self.jogador.pos.y = hit[0].rect.top
+            self.jogador.vel.y = 0
+
 
     def eventos(self):
         #Game loop - eventos
