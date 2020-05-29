@@ -117,6 +117,20 @@ class Game:
             if hit:
                 self.jogador.pos.y = hit[0].rect.top
                 self.jogador.vel.y = 0
+        if self.jogador.rect.top <= ALTURA / 4:
+            self.jogador.pos.y += abs(self.jogador.vel.y)
+            for plat in self.plataforma:
+                plat.rect.y += abs(self.jogador.vel.y)
+                if plat.rect.top >= ALTURA:
+                    plat.kill()
+
+        while len(self.plataforma) < 6:
+            largura = random.randrange(50, 100)
+            p = Plataformas(random.randrange(0, LARGURA - largura),
+                                            random.randrange(-75, -30),
+                                            largura, 20)
+            self.plataforma.add(p)
+            self.all_sprites.add(p)
 
     def eventos(self):
         #Game loop - eventos
