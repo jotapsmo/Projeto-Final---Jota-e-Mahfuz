@@ -5,7 +5,7 @@ vet = pygame.math.Vector2
 LARGURA = 480
 ALTURA = 600
 FPS = 60
- 
+FONTE = "arial"
  
 #Site com cores: https://www.webucator.com/blog/2015/03/python-color-constants-module/
 #DEFININDO CORES:
@@ -20,6 +20,8 @@ CINZA = (127, 127, 127)
 AC_JOGADOR = 0.8
 F_JOGADOR = -0.16
 G_JOGADOR = 1
+PULO_JOGADOR = 20
+
  
 LISTA_PLATAFORMAS = [(0, ALTURA - 40, LARGURA, 40), 
                     (LARGURA / 2 - 50, ALTURA * 3 / 4, 100, 20),
@@ -47,7 +49,7 @@ class Jogador(pygame.sprite.Sprite):
         hits = pygame.sprite.spritecollide(self, self.game.plataforma, False)
         self.rect.x -= 1
         if hits:
-            self.vel.y = -20      
+            self.vel.y = -PULO_JOGADOR
  
     def update(self):
         self.ac = vet(0, G_JOGADOR)
@@ -87,9 +89,11 @@ class Game:
         pygame.display.set_caption("DUDLE JUMP")
         self.clock = pygame.time.Clock()
         self.gestao = True
+        self.nome_fonte = pygame.font.match_font(FONTE)
 
     def new(self):
         #Começa um jogo novo
+        self.placar = 0
         self.all_sprites = pygame.sprite.Group()
         self.plataforma = pygame.sprite.Group()
         self.jogador = Jogador(self)
@@ -99,6 +103,7 @@ class Game:
             self.all_sprites.add(p)
             self.plataforma.add(p)
         self.run()
+
 
     def run(self):
         #Game loop
@@ -123,6 +128,15 @@ class Game:
                 plat.rect.y += abs(self.jogador.vel.y)
                 if plat.rect.top >= ALTURA:
                     plat.kill()
+                    self.placar += 10
+
+        if self.jogador.rect.bottom > ALTURA:
+            for sprite in self.all_sprites:
+                sprite.rect.y -= max(self.jogador.vel.y, 10)
+                if sprite.rect.bottom < 0:
+                    sprite.kill()
+        if len(self.plataforma) == 0:               
+            self.jogar = False
 
         while len(self.plataforma) < 6:
             largura = random.randrange(50, 100)
@@ -147,23 +161,29 @@ class Game:
         #Game loop - draw
         self.tela.fill(PRETO)
         self.all_sprites.draw(self.tela)
+        self.draw_texto(str(self.placar), 25, BRANCO, LARGURA/2, 15)
         #Depois de desenhar tudo, flip o display
         pygame.display.flip()
  
-    def show_tela_inicio(self):
+    def tela_inicio(self):
         #Mostra a tela de início
         pass
 
-    def show_tela_fim(self):
+    def tela_fim(self):
         #Mostra a tela do Game Over
         pass
 
+    def draw_texto(self, text, tamanho, cor, x, y):
+        fonte = pygame.font.Font(self.nome_fonte, tamanho)
+        texto_superficie = fonte.render(text, True, cor)
+        texto_rect = texto_superficie.get_rect()
+        texto_rect.midtop = (x, y)
+        self.tela.blit(texto_superficie, texto_rect)
+
 g = Game()
-g.show_tela_inicio()
+g.tela_inicio()
 while g.gestao:
     g.new()
-    g.show_tela_fim()
+    g.tela_fim()
 
-
- 
 pygame.quit()
