@@ -2,6 +2,7 @@ import pygame
 import random
 vet = pygame.math.Vector2
  
+TITULO = "DUDLE JUMP" 
 LARGURA = 480
 ALTURA = 600
 FPS = 60
@@ -15,7 +16,8 @@ VERMELHO = (255, 0, 0)
 VERDE = (0, 255, 0)
 AZUL = (0, 0, 255)
 CINZA = (127, 127, 127)
- 
+AZUL_CLARO = (0,154,205)
+LARANJA = (255,97,3) 
  
 AC_JOGADOR = 0.8
 F_JOGADOR = -0.16
@@ -86,7 +88,7 @@ class Game:
         pygame.init()
         pygame.mixer.init()
         self.tela = pygame.display.set_mode((LARGURA, ALTURA))
-        pygame.display.set_caption("DUDLE JUMP")
+        pygame.display.set_caption(TITULO)
         self.clock = pygame.time.Clock()
         self.gestao = True
         self.nome_fonte = pygame.font.match_font(FONTE)
@@ -159,19 +161,44 @@ class Game:
 
     def draw(self):
         #Game loop - draw
-        self.tela.fill(PRETO)
+        self.tela.fill(AZUL_CLARO)
         self.all_sprites.draw(self.tela)
         self.draw_texto(str(self.placar), 25, BRANCO, LARGURA/2, 15)
         #Depois de desenhar tudo, flip o display
         pygame.display.flip()
  
     def tela_inicio(self):
-        #Mostra a tela de início
-        pass
+        self.tela.fill(AZUL_CLARO)
+        self.draw_texto(TITULO, 48, BRANCO, LARGURA / 2, ALTURA / 4)
+        self.draw_texto("Setas para andar, Espaço para pular", 22, BRANCO, LARGURA / 2, ALTURA / 2)
+        self.draw_texto("Aperte uma tecla para jogar", 22, BRANCO, LARGURA / 2, ALTURA * 3 / 4)
+        pygame.display.flip()
+        self.espera_tecla()
+     
 
     def tela_fim(self):
         #Mostra a tela do Game Over
-        pass
+        if not self.gestao:
+            return
+        self.tela.fill(LARANJA)
+        self.draw_texto("GAME OVER", 48, PRETO, LARGURA / 2, ALTURA / 4)
+        self.draw_texto("Score: " + str(self.placar), 22, PRETO, LARGURA / 2, ALTURA / 2)
+        self.draw_texto("Aperte uma tecla para jogar", 22, PRETO, LARGURA / 2, ALTURA * 3 / 4)
+        pygame.display.flip()
+        self.espera_tecla()
+        
+
+    def espera_tecla(self):
+        espera = True
+        while espera:
+            self.clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    espera = False
+                    self.gestao = False
+                if event.type == pygame.KEYUP:
+                    espera = False
+
 
     def draw_texto(self, text, tamanho, cor, x, y):
         fonte = pygame.font.Font(self.nome_fonte, tamanho)
