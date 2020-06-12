@@ -1,3 +1,8 @@
 # Projeto-Final---Jota-e-Mahfuz
 
-João Pedro Marques & Pedro Mahfuz
+# Participantes
+
+João Pedro Pereira Silva Marques de Oliveira
+
+Pedro Osborn Mahfuz 
+
