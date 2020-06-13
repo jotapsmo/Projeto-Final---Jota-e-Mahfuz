@@ -38,14 +38,37 @@ class Jogador(pygame.sprite.Sprite):
     def __init__(self, game):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
-        self.image = self.game.spritesheet.get_image(4732,4550,1000,585)
-        self.image.set_colorkey(PRETO)
+        self.andando = False
+        self.pulando = False
+        self.frame_atual = 0
+        self.ultimo_update = 0
+        self.carrega_imagens()
+        self.image = self.em_pe[0]     
         self.rect = self.image.get_rect()
         #DEFINE A POSIÇÃO INCIAL DO JOGADOR
         self.rect.center = (LARGURA / 2, ALTURA / 2)
         self.pos = vet(LARGURA / 2, ALTURA / 2)
         self.vel = vet(0,0)
         self.ac = vet(0,0)
+
+
+    def carrega_imagens(self):
+        self.em_pe = [self.game.spritesheet.get_image(4732,4550,1000,585)]
+        for frame in self.em_pe:
+            frame.set_colorkey(PRETO)
+
+        self.andando_d = [self.game.spritesheet.get_image(6080,0,1984,1984)]
+        for frame in self.andando_d:
+            frame.set_colorkey(PRETO)
+        
+        self.andando_e = [pygame.transform.flip(self.game.spritesheet.get_image(6080,0,1984,1984), True, False)]
+        for frame in self.andando_e:
+            frame.set_colorkey(PRETO)
+        
+        self.pulando = [self.game.spritesheet.get_image(6080,1984,1984,1984)]
+        for frame in self.pulando:
+            frame.set_colorkey(PRETO)
+
  
     def pulo(self):
         # pular somente quando estiver sobre uma plataforma
@@ -56,6 +79,7 @@ class Jogador(pygame.sprite.Sprite):
             self.vel.y = -PULO_JOGADOR
  
     def update(self):
+        self.anima()
         self.ac = vet(0, G_JOGADOR)
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
@@ -74,7 +98,19 @@ class Jogador(pygame.sprite.Sprite):
             self.pos.x = LARGURA
  
         self.rect.midbottom = self.pos
- 
+
+
+    def anima(self):
+        agora = pygame.time.get_ticks()
+        if not self.pulando and not self.andando:
+            if agora - self.ultimo_update > 350:
+                self.ultimo_update = agora
+                self.frame_atual = (self.frame_atual + 1) % len(self.em_pe)
+                base = self.rect.base
+                self.image = self.em_pe[self.frame_atual]
+                self.rect = self.image.get_rect()
+                self.rect.base = base
+
 class Plataformas(pygame.sprite.Sprite):
     def __init__(self, x, y, l, h):
         pygame.sprite.Sprite.__init__(self)
