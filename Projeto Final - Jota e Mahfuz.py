@@ -1,5 +1,6 @@
 import pygame
 import random
+from os import path
 vet = pygame.math.Vector2
  
 TITULO = "DUDLE JUMP" 
@@ -7,6 +8,7 @@ LARGURA = 480
 ALTURA = 600
 FPS = 60
 FONTE = "arial"
+SPRITESHEET = "pixel art.png"
  
 #Site com cores: https://www.webucator.com/blog/2015/03/python-color-constants-module/
 #DEFININDO CORES:
@@ -36,8 +38,8 @@ class Jogador(pygame.sprite.Sprite):
     def __init__(self, game):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
-        self.image = pygame.Surface((30, 40))
-        self.image.fill(VERMELHO)
+        self.image = self.game.spritesheet.get_image(4732,4550,1000,585)
+        self.image.set_colorkey(PRETO)
         self.rect = self.image.get_rect()
         #DEFINE A POSIÇÃO INCIAL DO JOGADOR
         self.rect.center = (LARGURA / 2, ALTURA / 2)
@@ -81,7 +83,17 @@ class Plataformas(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        
+
+class Spritesheet:
+    def __init__(self, filename):
+        self.spritesheet = pygame.image.load(filename).convert()
+
+    def get_image(self, x, y, altura, largura):
+        image = pygame.Surface((largura, altura))
+        image.blit(self.spritesheet, (0,0), (x, y, largura, altura))
+        image = pygame.transform.scale(image, (largura//15, altura//15))
+        return image
+
 class Game:
     def __init__(self):
         #Abre a janela do jogo 
@@ -92,6 +104,13 @@ class Game:
         self.clock = pygame.time.Clock()
         self.gestao = True
         self.nome_fonte = pygame.font.match_font(FONTE)
+        self.load_data()
+
+    def load_data(self):
+        self.dir = path.dirname(__file__)
+        imagem_dir = path.join(self.dir, "imagens")
+
+        self.spritesheet = Spritesheet(path.join(imagem_dir, SPRITESHEET))
 
     def new(self):
         #Começa um jogo novo
