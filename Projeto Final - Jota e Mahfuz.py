@@ -24,14 +24,14 @@ LARANJA = (255,97,3)
 AC_JOGADOR = 0.8
 F_JOGADOR = -0.16
 G_JOGADOR = 1
-PULO_JOGADOR = 20
+PULO_JOGADOR = 25
 
  
-LISTA_PLATAFORMAS = [(0, ALTURA - 40, LARGURA, 40), 
-                    (LARGURA / 2 - 50, ALTURA * 3 / 4, 100, 20),
-                    (125, ALTURA - 350, 100, 20),
-                    (350, 200, 100, 20),
-                    (175, 100, 50, 20)]
+LISTA_PLATAFORMAS = [(0, ALTURA - 60), 
+                    (LARGURA / 2 - 50, ALTURA * 3 / 4),
+                    (125, ALTURA - 350),
+                    (350, 200),
+                    (175, 100)]
  
  
 class Jogador(pygame.sprite.Sprite):
@@ -46,8 +46,8 @@ class Jogador(pygame.sprite.Sprite):
         self.image = self.em_pe[0]    
         self.rect = self.image.get_rect()
         #DEFINE A POSIÇÃO INCIAL DO JOGADOR
-        self.rect.center = (LARGURA / 2, ALTURA / 2)
-        self.pos = vet(LARGURA / 2, ALTURA / 2)
+        self.rect.center = (40, ALTURA - 100)
+        self.pos = vet(40, ALTURA - 100)
         self.vel = vet(0,0)
         self.ac = vet(0,0)
 
@@ -72,13 +72,18 @@ class Jogador(pygame.sprite.Sprite):
         for frame in self.pulando:
             frame.set_colorkey(PRETO)
 
- 
+    def pulo_corta(self):
+        if self.pulando:
+            if self.vel.y < -3:
+                self.vel.y = -3
+
     def pulo(self):
         # pular somente quando estiver sobre uma plataforma
-        self.rect.x += 1
+        self.rect.x += 2
         hits = pygame.sprite.spritecollide(self, self.game.plataforma, False)
-        self.rect.x -= 1
-        if hits:
+        self.rect.x -= 2
+        if hits and not self.pulando:
+            self.pulando = True
             self.vel.y = -PULO_JOGADOR
  
     def update(self):
@@ -128,16 +133,17 @@ class Jogador(pygame.sprite.Sprite):
             if agora - self.ultimo_update > 200:
                 self.ultimo_update = agora
                 self.frame_atual = (self.frame_atual + 1) % len(self.em_pe)
-                base = self.rect.base
+                bottom = self.rect.bottom
                 self.image = self.em_pe[self.frame_atual]
                 self.rect = self.image.get_rect()
-                self.rect.base = base
+                self.rect.bottom = bottom
 
 class Plataformas(pygame.sprite.Sprite):
-    def __init__(self, x, y, l, h):
+    def __init__(self, jogo, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((l, h))
-        self.image.fill(BRANCO)
+        self.jogo = jogo
+        imagens = [self.jogo.spritesheet.get_image(0, 590, 50, 380)]
+        self.image = random.choice(imagens)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -149,7 +155,7 @@ class Spritesheet:
     def get_image(self, x, y, altura, largura):
         image = pygame.Surface((largura, altura))
         image.blit(self.spritesheet, (0,0), (x, y, largura, altura))
-        image = pygame.transform.scale(image, (largura//2, altura//2))
+        image = pygame.transform.scale(image, (largura//5, altura//5))
         return image
 
 class Game:
@@ -178,7 +184,7 @@ class Game:
         self.jogador = Jogador(self)
         self.all_sprites.add(self.jogador)
         for plat in LISTA_PLATAFORMAS:
-            p = Plataformas(*plat)
+            p = Plataformas(self, *plat)
             self.all_sprites.add(p)
             self.plataforma.add(p)
         self.run()
@@ -199,13 +205,20 @@ class Game:
         if self.jogador.vel.y > 0:
             hit = pygame.sprite.spritecollide(self.jogador, self.plataforma, False)
             if hit:
-                self.jogador.pos.y = hit[0].rect.top
-                self.jogador.vel.y = 0
+                mais_baixo = hit[0]
+                for h in hit:
+                    if h.rect.bottom > mais_baixo.rect.bottom:
+                        mais_baixo = h
+                if self.jogador.pos.y < mais_baixo.rect.bottom:
+                    self.jogador.pos.y = mais_baixo.rect.top
+                    self.jogador.vel.y = 0
+                    self.jogador.pulando = False
+
         if self.jogador.rect.top <= ALTURA / 4:
-            self.jogador.pos.y += abs(self.jogador.vel.y)
+            self.jogador.pos.y += max(abs(self.jogador.vel.y), 2)
             for plat in self.plataforma:
-                plat.rect.y += abs(self.jogador.vel.y)
-                if plat.rect.top >= ALTURA:
+                plat.rect.y += max(abs(self.jogador.vel.y), 2)
+                if plat.rect.top > ALTURA:
                     plat.kill()
                     self.placar += 1
 
@@ -219,9 +232,8 @@ class Game:
 
         while len(self.plataforma) < 6:
             largura = random.randrange(50, 100)
-            p = Plataformas(random.randrange(0, LARGURA - largura),
-                                            random.randrange(-75, -30),
-                                            largura, 20)
+            p = Plataformas(self, random.randrange(0, LARGURA - largura),
+                                            random.randrange(-75, -30))
             self.plataforma.add(p)
             self.all_sprites.add(p)
 
@@ -235,11 +247,16 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.jogador.pulo()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    self.jogador.pulo_corta()
+
 
     def draw(self):
         #Game loop - draw
         self.tela.fill(AZUL_CLARO)
         self.all_sprites.draw(self.tela)
+        self.tela.blit(self.jogador.image, self.jogador.rect)
         self.draw_texto(str(self.placar), 25, BRANCO, LARGURA/2, 15)
         #Depois de desenhar tudo, flip o display
         pygame.display.flip()
@@ -290,4 +307,4 @@ while g.gestao:
     g.new()
     g.tela_fim()
 
-pygame.quit()
+pygame.quit() 
