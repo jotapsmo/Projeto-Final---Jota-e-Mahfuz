@@ -8,7 +8,7 @@ LARGURA = 480
 ALTURA = 600
 FPS = 60
 FONTE = "times new roman"
-SPRITESHEET = "Caveira .png"
+SPRITESHEET = "final2.png"
  
 #Site com cores: https://www.webucator.com/blog/2015/03/python-color-constants-module/
 #DEFININDO CORES:
@@ -24,7 +24,7 @@ LARANJA = (255,97,3)
 AC_JOGADOR = 0.8
 F_JOGADOR = -0.16
 G_JOGADOR = 1
-PULO_JOGADOR = 25
+PULO_JOGADOR = 21
 
  
 LISTA_PLATAFORMAS = [(0, ALTURA - 60), 
@@ -33,7 +33,16 @@ LISTA_PLATAFORMAS = [(0, ALTURA - 60),
                     (350, 200),
                     (175, 100)]
  
- 
+class Spritesheet:
+    def __init__(self, filename):
+        self.spritesheet = pygame.image.load(filename).convert()
+
+    def get_image(self, x, y, altura, largura):
+        image = pygame.Surface((largura, altura))
+        image.blit(self.spritesheet, (0,0), (x, y, largura, altura))
+        image = pygame.transform.scale(image, (largura//4, altura//4))
+        return image 
+
 class Jogador(pygame.sprite.Sprite):
     def __init__(self, game):
         pygame.sprite.Sprite.__init__(self)
@@ -43,7 +52,7 @@ class Jogador(pygame.sprite.Sprite):
         self.frame_atual = 0
         self.ultimo_update = 0
         self.carrega_imagens()
-        self.image = self.em_pe[0]    
+        self.image = self.em_pe[0]
         self.rect = self.image.get_rect()
         #DEFINE A POSIÇÃO INCIAL DO JOGADOR
         self.rect.center = (40, ALTURA - 100)
@@ -58,41 +67,36 @@ class Jogador(pygame.sprite.Sprite):
         for frame in self.em_pe:
             frame.set_colorkey(PRETO)
 
-        self.andando_d = [self.game.spritesheet.get_image(0,220,270,150),
+        self.andando_d = [self.game.spritesheet.get_image(410,370,270,100),
         self.game.spritesheet.get_image(160,220,270,150)]
         for frame in self.andando_d:
             frame.set_colorkey(PRETO)
         
-        self.andando_e = [pygame.transform.flip(self.game.spritesheet.get_image(0,220,270,150), 
+        self.andando_e = [pygame.transform.flip(self.game.spritesheet.get_image(410,370,270,100), 
         True, False), pygame.transform.flip(self.game.spritesheet.get_image(160,220,270,150), True, False)]
         for frame in self.andando_e:
             frame.set_colorkey(PRETO)
         
-        self.pulando = [self.game.spritesheet.get_image(0,0,0,0)]
+        self.pulando = [self.game.spritesheet.get_image(420,30,270,130)]
         for frame in self.pulando:
             frame.set_colorkey(PRETO)
 
-    def pulo_corta(self):
-        if self.pulando:
-            if self.vel.y < -3:
-                self.vel.y = -3
-
+ 
     def pulo(self):
         # pular somente quando estiver sobre uma plataforma
         self.rect.x += 2
         hits = pygame.sprite.spritecollide(self, self.game.plataforma, False)
         self.rect.x -= 2
-        if hits and not self.pulando:
-            self.pulando = True
+        if hits:
             self.vel.y = -PULO_JOGADOR
  
     def update(self):
         self.anima()
         self.ac = vet(0, G_JOGADOR)
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.ac.x = -AC_JOGADOR
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.ac.x = AC_JOGADOR
 
         #CONTROLE SOBRE A MOVIMENTAÇÃO DO JOGADOR --> FRICÇÃO E EQUAÇÕES DE MOVIMENTO
@@ -118,7 +122,7 @@ class Jogador(pygame.sprite.Sprite):
             self.andando = False
 
         if self.andando:
-            if agora - self.ultimo_update > 200:
+            if agora - self.ultimo_update > 250:
                 self.ultimo_update = agora
                 self.frame_atual = (self.frame_atual + 1) % len(self.andando_e)
                 bottom = self.rect.bottom
@@ -130,33 +134,23 @@ class Jogador(pygame.sprite.Sprite):
                 self.rect.bottom = bottom
 
         if not self.pulando and not self.andando:
-            if agora - self.ultimo_update > 200:
+            if agora - self.ultimo_update > 350:
                 self.ultimo_update = agora
                 self.frame_atual = (self.frame_atual + 1) % len(self.em_pe)
                 bottom = self.rect.bottom
                 self.image = self.em_pe[self.frame_atual]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
-
+                
 class Plataformas(pygame.sprite.Sprite):
-    def __init__(self, jogo, x, y):
+    def __init__(self, game, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.jogo = jogo
-        imagens = [self.jogo.spritesheet.get_image(0, 590, 50, 380)]
+        self.game = game
+        imagens = [self.game.spritesheet.get_image(0, 530, 120, 390)]
         self.image = random.choice(imagens)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
-class Spritesheet:
-    def __init__(self, filename):
-        self.spritesheet = pygame.image.load(filename).convert()
-
-    def get_image(self, x, y, altura, largura):
-        image = pygame.Surface((largura, altura))
-        image.blit(self.spritesheet, (0,0), (x, y, largura, altura))
-        image = pygame.transform.scale(image, (largura//5, altura//5))
-        return image
 
 class Game:
     def __init__(self):
@@ -175,6 +169,9 @@ class Game:
         imagem_dir = path.join(self.dir, "imagens")
 
         self.spritesheet = Spritesheet(path.join(imagem_dir, SPRITESHEET))
+        self.som_dir = path.join(self.dir, "sons")
+        self.som_pulo = pygame.mixer.Sound(path.join(self.som_dir, "pulo1.wav"))
+        self.som_morte = pygame.mixer.Sound(path.join(self.som_dir, "gta.wav"))
 
     def new(self):
         #Começa um jogo novo
@@ -187,17 +184,21 @@ class Game:
             p = Plataformas(self, *plat)
             self.all_sprites.add(p)
             self.plataforma.add(p)
+        pygame.mixer.music.load(path.join(self.som_dir, "crab.wav"))
         self.run()
 
 
     def run(self):
         #Game loop
+        pygame.mixer.music.play(loops=-1)
         self.jogar = True
         while self.jogar:
             self.clock.tick(FPS)
             self.eventos()
             self.update()
             self.draw()
+        pygame.mixer.music.fadeout(700)
+         
 
     def update(self):
         #Game loop - Update
@@ -212,13 +213,13 @@ class Game:
                 if self.jogador.pos.y < mais_baixo.rect.bottom:
                     self.jogador.pos.y = mais_baixo.rect.top
                     self.jogador.vel.y = 0
-                    self.jogador.pulando = False
+
 
         if self.jogador.rect.top <= ALTURA / 4:
             self.jogador.pos.y += max(abs(self.jogador.vel.y), 2)
             for plat in self.plataforma:
                 plat.rect.y += max(abs(self.jogador.vel.y), 2)
-                if plat.rect.top > ALTURA:
+                if plat.rect.top >= ALTURA:
                     plat.kill()
                     self.placar += 1
 
@@ -245,12 +246,10 @@ class Game:
                     self.jogar = False
                 self.gestao = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE or event.key == pygame.K_w:
+                    self.som_pulo.play()
                     self.jogador.pulo()
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_SPACE:
-                    self.jogador.pulo_corta()
-
+                    
 
     def draw(self):
         #Game loop - draw
@@ -262,18 +261,21 @@ class Game:
         pygame.display.flip()
  
     def tela_inicio(self):
+        pygame.mixer.music.load(path.join(self.som_dir, "nw.wav"))
+        pygame.mixer.music.play(loops=-1)
         self.tela.fill(AZUL_CLARO)
         self.draw_texto(TITULO, 48, BRANCO, LARGURA / 2, ALTURA / 4)
         self.draw_texto("Setas para andar, Espaço para pular", 22, BRANCO, LARGURA / 2, ALTURA / 2)
         self.draw_texto("Aperte uma tecla para jogar", 22, BRANCO, LARGURA / 2, ALTURA * 3 / 4)
         pygame.display.flip()
         self.espera_tecla()
+        pygame.mixer.music.fadeout(600)
      
-
     def tela_fim(self):
         #Mostra a tela do Game Over
         if not self.gestao:
             return
+        self.som_morte.play()
         self.tela.fill(PRETO)
         self.draw_texto("GAME OVER", 48, BRANCO, LARGURA / 2, ALTURA / 4)
         self.draw_texto("Plataformas " + str(self.placar), 22, BRANCO, LARGURA / 2, ALTURA / 2)
@@ -307,4 +309,4 @@ while g.gestao:
     g.new()
     g.tela_fim()
 
-pygame.quit() 
+pygame.quit()
