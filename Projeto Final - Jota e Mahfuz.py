@@ -7,6 +7,7 @@ TITULO = "DUDLE JUMP"
 LARGURA = 480
 ALTURA = 600
 FPS = 60
+MORTE = 1/4
 FONTE = "times new roman"
 SPRITESHEET = "final2.png"
  
@@ -25,6 +26,7 @@ AC_JOGADOR = 0.8
 F_JOGADOR = -0.16
 G_JOGADOR = 1
 PULO_JOGADOR = 21
+FI = 4000
 
  
 LISTA_PLATAFORMAS = [(0, ALTURA - 60), 
@@ -143,6 +145,8 @@ class Jogador(pygame.sprite.Sprite):
                 self.rect.bottom = bottom
                 
 class Plataformas(pygame.sprite.Sprite):
+
+
     def __init__(self, game, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
@@ -151,6 +155,41 @@ class Plataformas(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+class Inimigo(pygame.sprite.Sprite):
+    def __init__(self, game):
+        self.groups = game.all_sprites, game.inimigos
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.asa_cima = self.game.spritesheet.get_image(0,80,120,160)
+        self.asa_cima.set_colorkey(PRETO)
+        self.asa_baixo = self.game.spritesheet.get_image(0,0,80,190)
+        self.asa_baixo.set_colorkey(PRETO)
+        self.image = self.asa_cima
+        self.rect = self.image.get_rect()
+        self.rect.centerx = random.choice([-100, LARGURA + 100])
+        self.vx = random.randrange(1,4)
+        if self.rect.centerx > LARGURA:
+            self.vx *= -1
+        self.rect.y = random.randrange(ALTURA / 2)
+        self.vy = 0
+        self.dy = 0.5
+
+    def update(self):
+        self.rect.x += self.vx
+        self.vy += self.dy
+        if self.vy > 3 or self.vy < -3:
+            self.dy *= -1
+        center = self.rect.center
+        if self.dy < 0:
+            self.image = self.asa_cima
+        else:
+            self.image = self.asa_baixo
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.rect.y += self.vy
+        if self.rect.left > LARGURA + 100 or self.rect.right < -100:
+            self.kill()
 
 class Game:
     def __init__(self):
@@ -178,12 +217,14 @@ class Game:
         self.placar = 0
         self.all_sprites = pygame.sprite.Group()
         self.plataforma = pygame.sprite.Group()
+        self.inimigos = pygame.sprite.Group()
         self.jogador = Jogador(self)
         self.all_sprites.add(self.jogador)
         for plat in LISTA_PLATAFORMAS:
             p = Plataformas(self, *plat)
             self.all_sprites.add(p)
             self.plataforma.add(p)
+        self.timer_inimigo = 0
         pygame.mixer.music.load(path.join(self.som_dir, "crab.wav"))
         self.run()
 
@@ -199,10 +240,20 @@ class Game:
             self.draw()
         pygame.mixer.music.fadeout(700)
          
-
+    
     def update(self):
         #Game loop - Update
         self.all_sprites.update()
+
+        agora = pygame.time.get_ticks()
+        if agora - self.timer_inimigo > 4000 + random.choice([-1000, -500, 0, 500, 1000]):
+            self.timer_inimigo = agora
+            Inimigo(self)
+        #hit inimigos
+        inimigo_hits = pygame.sprite.spritecollide(self.jogador, self.inimigos, False)
+        if inimigo_hits:
+            self.jogar = False
+    
         if self.jogador.vel.y > 0:
             hit = pygame.sprite.spritecollide(self.jogador, self.plataforma, False)
             if hit:
@@ -215,8 +266,11 @@ class Game:
                     self.jogador.vel.y = 0
 
 
+        #Atingindo 1/4 da tela e fazendo ela "rolar"
         if self.jogador.rect.top <= ALTURA / 4:
             self.jogador.pos.y += max(abs(self.jogador.vel.y), 2)
+            for i in self.inimigos:
+                i.rect.y += max(abs(self.jogador.vel.y), 2)
             for plat in self.plataforma:
                 plat.rect.y += max(abs(self.jogador.vel.y), 2)
                 if plat.rect.top >= ALTURA:
@@ -268,7 +322,7 @@ class Game:
         self.draw_texto("Setas para andar, Espaço para pular", 22, BRANCO, LARGURA / 2, ALTURA / 2)
         self.draw_texto("Aperte uma tecla para jogar", 22, BRANCO, LARGURA / 2, ALTURA * 3 / 4)
         pygame.display.flip()
-        self.espera_tecla()
+        self.espera_tecla_inicio()
         pygame.mixer.music.fadeout(600)
      
     def tela_fim(self):
@@ -281,13 +335,24 @@ class Game:
         self.draw_texto("Plataformas " + str(self.placar), 22, BRANCO, LARGURA / 2, ALTURA / 2)
         self.draw_texto("Aperte uma tecla para jogar", 22, BRANCO, LARGURA / 2, ALTURA * 3 / 4)
         pygame.display.flip()
-        self.espera_tecla()
+        self.espera_tecla_fim()
         
 
-    def espera_tecla(self):
+    def espera_tecla_inicio(self):
         espera = True
         while espera:
             self.clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    espera = False
+                    self.gestao = False
+                if event.type == pygame.KEYUP:
+                    espera = False
+    
+    def espera_tecla_fim(self):
+        espera = True
+        while espera:
+            self.clock.tick(MORTE)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     espera = False
@@ -309,4 +374,4 @@ while g.gestao:
     g.new()
     g.tela_fim()
 
-pygame.quit()
+pygame.quit() 
