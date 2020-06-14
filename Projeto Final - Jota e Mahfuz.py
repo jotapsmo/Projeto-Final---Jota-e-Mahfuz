@@ -7,8 +7,8 @@ TITULO = "DUDLE JUMP"
 LARGURA = 480
 ALTURA = 600
 FPS = 60
-FONTE = "arial"
-SPRITESHEET = "pixel art.png"
+FONTE = "times new roman"
+SPRITESHEET = "Caveira .png"
  
 #Site com cores: https://www.webucator.com/blog/2015/03/python-color-constants-module/
 #DEFININDO CORES:
@@ -43,7 +43,7 @@ class Jogador(pygame.sprite.Sprite):
         self.frame_atual = 0
         self.ultimo_update = 0
         self.carrega_imagens()
-        self.image = self.em_pe[0]     
+        self.image = self.em_pe[0]    
         self.rect = self.image.get_rect()
         #DEFINE A POSIÇÃO INCIAL DO JOGADOR
         self.rect.center = (LARGURA / 2, ALTURA / 2)
@@ -53,19 +53,22 @@ class Jogador(pygame.sprite.Sprite):
 
 
     def carrega_imagens(self):
-        self.em_pe = [self.game.spritesheet.get_image(4732,4550,1000,585)]
+        self.em_pe = [self.game.spritesheet.get_image(410,370,270,100), 
+        self.game.spritesheet.get_image(530,370,270,100)]
         for frame in self.em_pe:
             frame.set_colorkey(PRETO)
 
-        self.andando_d = [self.game.spritesheet.get_image(6080,0,1984,1984)]
+        self.andando_d = [self.game.spritesheet.get_image(0,220,270,150),
+        self.game.spritesheet.get_image(160,220,270,150)]
         for frame in self.andando_d:
             frame.set_colorkey(PRETO)
         
-        self.andando_e = [pygame.transform.flip(self.game.spritesheet.get_image(6080,0,1984,1984), True, False)]
+        self.andando_e = [pygame.transform.flip(self.game.spritesheet.get_image(0,220,270,150), 
+        True, False), pygame.transform.flip(self.game.spritesheet.get_image(160,220,270,150), True, False)]
         for frame in self.andando_e:
             frame.set_colorkey(PRETO)
         
-        self.pulando = [self.game.spritesheet.get_image(6080,1984,1984,1984)]
+        self.pulando = [self.game.spritesheet.get_image(0,0,0,0)]
         for frame in self.pulando:
             frame.set_colorkey(PRETO)
 
@@ -90,11 +93,13 @@ class Jogador(pygame.sprite.Sprite):
         #CONTROLE SOBRE A MOVIMENTAÇÃO DO JOGADOR --> FRICÇÃO E EQUAÇÕES DE MOVIMENTO
         self.ac.x += self.vel.x * F_JOGADOR
         self.vel += self.ac
+        if abs(self.vel.x) < 0.1:
+            self.vel.x = 0
         self.pos += self.vel + 0.5 * self.ac
         #DAR A VOLTA NA TELA
-        if self.pos.x > LARGURA:
+        if self.pos.x > LARGURA :
             self.pos.x = 0
-        if self.pos.x < 0:
+        if self.pos.x < 0 :
             self.pos.x = LARGURA
  
         self.rect.midbottom = self.pos
@@ -102,8 +107,25 @@ class Jogador(pygame.sprite.Sprite):
 
     def anima(self):
         agora = pygame.time.get_ticks()
+        if self.vel.x != 0:
+            self.andando = True
+        else:
+            self.andando = False
+
+        if self.andando:
+            if agora - self.ultimo_update > 200:
+                self.ultimo_update = agora
+                self.frame_atual = (self.frame_atual + 1) % len(self.andando_e)
+                bottom = self.rect.bottom
+                if self.vel.x > 0:
+                    self.image = self.andando_d[self.frame_atual]
+                else:
+                    self.image = self.andando_e[self.frame_atual]   
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+
         if not self.pulando and not self.andando:
-            if agora - self.ultimo_update > 350:
+            if agora - self.ultimo_update > 200:
                 self.ultimo_update = agora
                 self.frame_atual = (self.frame_atual + 1) % len(self.em_pe)
                 base = self.rect.base
@@ -127,7 +149,7 @@ class Spritesheet:
     def get_image(self, x, y, altura, largura):
         image = pygame.Surface((largura, altura))
         image.blit(self.spritesheet, (0,0), (x, y, largura, altura))
-        image = pygame.transform.scale(image, (largura//15, altura//15))
+        image = pygame.transform.scale(image, (largura//2, altura//2))
         return image
 
 class Game:
@@ -185,7 +207,7 @@ class Game:
                 plat.rect.y += abs(self.jogador.vel.y)
                 if plat.rect.top >= ALTURA:
                     plat.kill()
-                    self.placar += 10
+                    self.placar += 1
 
         if self.jogador.rect.bottom > ALTURA:
             for sprite in self.all_sprites:
@@ -235,10 +257,10 @@ class Game:
         #Mostra a tela do Game Over
         if not self.gestao:
             return
-        self.tela.fill(LARANJA)
-        self.draw_texto("GAME OVER", 48, PRETO, LARGURA / 2, ALTURA / 4)
-        self.draw_texto("Score: " + str(self.placar), 22, PRETO, LARGURA / 2, ALTURA / 2)
-        self.draw_texto("Aperte uma tecla para jogar", 22, PRETO, LARGURA / 2, ALTURA * 3 / 4)
+        self.tela.fill(PRETO)
+        self.draw_texto("GAME OVER", 48, BRANCO, LARGURA / 2, ALTURA / 4)
+        self.draw_texto("Plataformas " + str(self.placar), 22, BRANCO, LARGURA / 2, ALTURA / 2)
+        self.draw_texto("Aperte uma tecla para jogar", 22, BRANCO, LARGURA / 2, ALTURA * 3 / 4)
         pygame.display.flip()
         self.espera_tecla()
         
