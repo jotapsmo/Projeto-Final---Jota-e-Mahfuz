@@ -1,8 +1,10 @@
+# Importando as bibliotecas necessárias
 import pygame
 import random
 from os import path
 vet = pygame.math.Vector2
- 
+
+# Customização
 TITULO = "DUDLE JUMP" 
 LARGURA = 480
 ALTURA = 600
@@ -12,7 +14,7 @@ FONTE = "times new roman"
 SPRITESHEET = "final2.png"
  
 #Site com cores: https://www.webucator.com/blog/2015/03/python-color-constants-module/
-#DEFININDO CORES:
+# DEFININDO CORES:
 BRANCO = (255, 255, 255)
 PRETO = (0, 0, 0)
 VERMELHO = (255, 0, 0) 
@@ -20,32 +22,39 @@ VERDE = (0, 255, 0)
 AZUL = (0, 0, 255)
 CINZA = (127, 127, 127)
 AZUL_CLARO = (0,154,205)
-LARANJA = (255,97,3)
- 
+LARANJA = (255,99,71)
+ROXO = (75,0,130)
+
+# Parametros utilizados 
 AC_JOGADOR = 0.8
 F_JOGADOR = -0.16
 G_JOGADOR = 1
-PULO_JOGADOR = 21
+PULO_JOGADOR = 23
 FI = 4000
 
- 
+# Lista de plataformas iniciais 
 LISTA_PLATAFORMAS = [(0, ALTURA - 60), 
                     (LARGURA / 2 - 50, ALTURA * 3 / 4),
                     (125, ALTURA - 350),
                     (350, 200),
                     (175, 100)]
- 
+
+# Classe para utilização da Spritesheet
 class Spritesheet:
     def __init__(self, filename):
         self.spritesheet = pygame.image.load(filename).convert()
 
+    # Pega seção especifica da Spritesheet e redimensiona a imagem
     def get_image(self, x, y, altura, largura):
         image = pygame.Surface((largura, altura))
         image.blit(self.spritesheet, (0,0), (x, y, largura, altura))
         image = pygame.transform.scale(image, (largura//4, altura//4))
         return image 
 
+# Classe do jogador
 class Jogador(pygame.sprite.Sprite):
+    
+    # Define os valores e condições iniciais do jogador
     def __init__(self, game):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
@@ -56,13 +65,14 @@ class Jogador(pygame.sprite.Sprite):
         self.carrega_imagens()
         self.image = self.em_pe[0]
         self.rect = self.image.get_rect()
+
         #DEFINE A POSIÇÃO INCIAL DO JOGADOR
         self.rect.center = (40, ALTURA - 100)
         self.pos = vet(40, ALTURA - 100)
         self.vel = vet(0,0)
         self.ac = vet(0,0)
 
-
+    # Carrega as imagens da Spritesheet para a animação e retira o fundo
     def carrega_imagens(self):
         self.em_pe = [self.game.spritesheet.get_image(410,370,270,100), 
         self.game.spritesheet.get_image(530,370,270,100)]
@@ -83,7 +93,7 @@ class Jogador(pygame.sprite.Sprite):
         for frame in self.pulando:
             frame.set_colorkey(PRETO)
 
- 
+    # Define as configurações do pulo do jogador
     def pulo(self):
         # pular somente quando estiver sobre uma plataforma
         self.rect.x += 2
@@ -92,6 +102,7 @@ class Jogador(pygame.sprite.Sprite):
         if hits:
             self.vel.y = -PULO_JOGADOR
  
+    # Verifica o que precisa ser modificado
     def update(self):
         self.anima()
         self.ac = vet(0, G_JOGADOR)
@@ -115,7 +126,7 @@ class Jogador(pygame.sprite.Sprite):
  
         self.rect.midbottom = self.pos
 
-
+    # Produz as animações das sprites
     def anima(self):
         agora = pygame.time.get_ticks()
         if self.vel.x != 0:
@@ -143,10 +154,11 @@ class Jogador(pygame.sprite.Sprite):
                 self.image = self.em_pe[self.frame_atual]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
-                
+
+# Classe que define as plataformas                
 class Plataformas(pygame.sprite.Sprite):
 
-
+    # Puxa as sprites das plataformas e da suas dimensões e parametros
     def __init__(self, game, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
@@ -156,7 +168,10 @@ class Plataformas(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+# Classe dos inimigos
 class Inimigo(pygame.sprite.Sprite):
+    
+    # Puxa as sprites do inimigo e define seu movimento
     def __init__(self, game):
         self.groups = game.all_sprites, game.inimigos
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -175,6 +190,7 @@ class Inimigo(pygame.sprite.Sprite):
         self.vy = 0
         self.dy = 0.5
 
+    # Verifica as modificações necessarias e faz ele se movimentar
     def update(self):
         self.rect.x += self.vx
         self.vy += self.dy
@@ -191,7 +207,10 @@ class Inimigo(pygame.sprite.Sprite):
         if self.rect.left > LARGURA + 100 or self.rect.right < -100:
             self.kill()
 
+# Classe que faz o jogo rodar
 class Game:
+    
+    # Inicia e define propriedades do jogo
     def __init__(self):
         #Abre a janela do jogo 
         pygame.init()
@@ -203,6 +222,7 @@ class Game:
         self.nome_fonte = pygame.font.match_font(FONTE)
         self.load_data()
 
+    # Carrega as informações de imagem e som das pastas
     def load_data(self):
         self.dir = path.dirname(__file__)
         imagem_dir = path.join(self.dir, "imagens")
@@ -212,8 +232,8 @@ class Game:
         self.som_pulo = pygame.mixer.Sound(path.join(self.som_dir, "pulo1.wav"))
         self.som_morte = pygame.mixer.Sound(path.join(self.som_dir, "gta.wav"))
 
+    # Começa um novo jogo definindo o "grupo" de sprites, iniciando a contagem do placar e a musica de fundo do jogo
     def new(self):
-        #Começa um jogo novo
         self.placar = 0
         self.all_sprites = pygame.sprite.Group()
         self.plataforma = pygame.sprite.Group()
@@ -228,9 +248,9 @@ class Game:
         pygame.mixer.music.load(path.join(self.som_dir, "crab.wav"))
         self.run()
 
-
+    # Parte do game loop responsável pelas ocorrências do jogo 
     def run(self):
-        #Game loop
+        pygame.mixer.music.set_volume(0.1)
         pygame.mixer.music.play(loops=-1)
         self.jogar = True
         while self.jogar:
@@ -240,20 +260,22 @@ class Game:
             self.draw()
         pygame.mixer.music.fadeout(700)
          
-    
+    # Faz o update do loop do jogo
     def update(self):
-        #Game loop - Update
         self.all_sprites.update()
 
+        # Randomiza a aparição do inimigo
         agora = pygame.time.get_ticks()
         if agora - self.timer_inimigo > 4000 + random.choice([-1000, -500, 0, 500, 1000]):
             self.timer_inimigo = agora
             Inimigo(self)
-        #hit inimigos
+
+        # Colisão com inimigos
         inimigo_hits = pygame.sprite.spritecollide(self.jogador, self.inimigos, False)
         if inimigo_hits:
             self.jogar = False
     
+        # Faz jogador não teletransportar para cima da plataforma ao toca-la
         if self.jogador.vel.y > 0:
             hit = pygame.sprite.spritecollide(self.jogador, self.plataforma, False)
             if hit:
@@ -264,7 +286,6 @@ class Game:
                 if self.jogador.pos.y < mais_baixo.rect.bottom:
                     self.jogador.pos.y = mais_baixo.rect.top
                     self.jogador.vel.y = 0
-
 
         #Atingindo 1/4 da tela e fazendo ela "rolar"
         if self.jogador.rect.top <= ALTURA / 4:
@@ -277,6 +298,7 @@ class Game:
                     plat.kill()
                     self.placar += 1
 
+        # Remove as plataformas quando saem da tela
         if self.jogador.rect.bottom > ALTURA:
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.jogador.vel.y, 10)
@@ -285,15 +307,17 @@ class Game:
         if len(self.plataforma) == 0:               
             self.jogar = False
 
+        # Randomiza as posições das platformas por tela
         while len(self.plataforma) < 6:
             largura = random.randrange(50, 100)
             p = Plataformas(self, random.randrange(0, LARGURA - largura),
-                                            random.randrange(-75, -30))
+                                            random.randrange(-80, -40))
             self.plataforma.add(p)
             self.all_sprites.add(p)
 
+    # Dentro do loop do jogo é responsavel por designar tarefas a cada tecla
     def eventos(self):
-        #Game loop - eventos
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 if self.jogar:
@@ -301,34 +325,40 @@ class Game:
                 self.gestao = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE or event.key == pygame.K_w:
+                    self.som_pulo.set_volume(0.1)
                     self.som_pulo.play()
                     self.jogador.pulo()
                     
-
+    # Produz o preenchimento das telas
     def draw(self):
-        #Game loop - draw
-        self.tela.fill(AZUL_CLARO)
+        self.tela.fill(ROXO)
         self.all_sprites.draw(self.tela)
         self.tela.blit(self.jogador.image, self.jogador.rect)
         self.draw_texto(str(self.placar), 25, BRANCO, LARGURA/2, 15)
         #Depois de desenhar tudo, flip o display
         pygame.display.flip()
  
+    # Cria a tela de inicio e faz os devidos preenchimentos
     def tela_inicio(self):
         pygame.mixer.music.load(path.join(self.som_dir, "nw.wav"))
+        pygame.mixer.music.set_volume(0.1)
         pygame.mixer.music.play(loops=-1)
-        self.tela.fill(AZUL_CLARO)
+        self.tela.fill(LARANJA)
         self.draw_texto(TITULO, 48, BRANCO, LARGURA / 2, ALTURA / 4)
         self.draw_texto("Setas para andar, Espaço para pular", 22, BRANCO, LARGURA / 2, ALTURA / 2)
-        self.draw_texto("Aperte uma tecla para jogar", 22, BRANCO, LARGURA / 2, ALTURA * 3 / 4)
+        self.draw_texto("ou", 22, BRANCO, LARGURA / 2, ALTURA / 1.85)
+        self.draw_texto("A e D para andar, W para pular", 22, BRANCO, LARGURA / 2, ALTURA / 1.70)
+        self.draw_texto("APERTE UMA TECLA PARA JOGAR", 22, BRANCO, LARGURA / 2, ALTURA * 3 / 4)
         pygame.display.flip()
         self.espera_tecla_inicio()
         pygame.mixer.music.fadeout(600)
      
+    # Cria a tela final e faz os devidos preenchimentos 
     def tela_fim(self):
         #Mostra a tela do Game Over
         if not self.gestao:
             return
+        self.som_morte.set_volume(0.1)
         self.som_morte.play()
         self.tela.fill(PRETO)
         self.draw_texto("GAME OVER", 48, BRANCO, LARGURA / 2, ALTURA / 4)
@@ -337,7 +367,7 @@ class Game:
         pygame.display.flip()
         self.espera_tecla_fim()
         
-
+    # Função que controla o tempo de visualização da tela de inicio
     def espera_tecla_inicio(self):
         espera = True
         while espera:
@@ -349,6 +379,7 @@ class Game:
                 if event.type == pygame.KEYUP:
                     espera = False
     
+    # Função que controla o tempo da visualização da tela final
     def espera_tecla_fim(self):
         espera = True
         while espera:
@@ -360,7 +391,7 @@ class Game:
                 if event.type == pygame.KEYUP:
                     espera = False
 
-
+    # Função especifica para escrever nas telas
     def draw_texto(self, text, tamanho, cor, x, y):
         fonte = pygame.font.Font(self.nome_fonte, tamanho)
         texto_superficie = fonte.render(text, True, cor)
@@ -368,6 +399,7 @@ class Game:
         texto_rect.midtop = (x, y)
         self.tela.blit(texto_superficie, texto_rect)
 
+# Funcionamento geral do jogo
 g = Game()
 g.tela_inicio()
 while g.gestao:
