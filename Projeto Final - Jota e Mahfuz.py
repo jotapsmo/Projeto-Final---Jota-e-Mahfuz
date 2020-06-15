@@ -12,7 +12,7 @@ FPS = 60
 MORTE = 1/4
 FONTE = "times new roman"
 SPRITESHEET = "final2.png"
- 
+
 #Site com cores: https://www.webucator.com/blog/2015/03/python-color-constants-module/
 # DEFININDO CORES:
 BRANCO = (255, 255, 255)

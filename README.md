@@ -15,7 +15,12 @@ Pedro Osborn Mahfuz
 O jogo consiste em pular e tentar alcançar o maior número de plataformas possível!
 
 Utilize as setas para andar e a barra de espaço para pular.
-Ou urilize as teclas "A" e "D" para andar e a tecla "W" para pular.
+
+Ou utilize as teclas "A" e "D" para andar e a tecla "W" para pular.
+
+# Link para o vídeo no Youtube:
+
+https://youtu.be/Swm9LO5lo_o
 
 # Referências:
 
